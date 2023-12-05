@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Создание самораспаковывающегося архива
+
+while getopts "d:n:" opt; do
+  case $opt in
+    d)
+      dir_path=$OPTARG
+      ;;
+    n)
+      name=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$dir_path" ] || [ -z "$name" ]; then
+  echo "Usage: $0 -d dir_path -n name"
+  exit 1
+fi
+# [-o unpack_dir]
+
+# Step 1: Generate a new bash script with the given name
+cat <<EOL > "$name"
+#!/bin/bash
+
+while getopts "o:" options; do
+    case \$options in
+      o)
+        unpack_dir=\$OPTARG
+        ;;
+      \?)
+        echo "Invalid option: -\$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -\$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+done
+
+# Step 2: Extract the compressed archive and execute it
+tail -n +\$(grep -n '^__ARCHIVE_BELOW__' "$0" | cut -d: -f1) "$0" | base64 -d | tar xz -C ${unpack_dir:-.}
+
+# Step 3: Exit the script
+exit 0
+
+__ARCHIVE_BELOW__
+EOL
+
+
+# Step 5: Create a compressed tar archive of the specified directory, encode it with base64
+tar czP "$dir_path" | base64 >> "$name"
+# Step 4: Make the script executable for all users
+chmod +x "$name"
+
+echo "Self-extracting archive created: $name"
+exit 0
