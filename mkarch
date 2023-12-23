@@ -1,9 +1,14 @@
 #!/bin/bash
 
+<<<<<<< Updated upstream
 # Создание самораспаковывающегося архива
 
 while getopts "d:n:" opt; do
   case $opt in
+=======
+while getopts "d:n:" option; do
+  case $option in
+>>>>>>> Stashed changes
     d)
       dir_path=$OPTARG
       ;;
@@ -21,6 +26,7 @@ while getopts "d:n:" opt; do
   esac
 done
 
+<<<<<<< Updated upstream
 if [ -z "$dir_path" ] || [ -z "$name" ]; then
   echo "Usage: $0 -d dir_path -n name"
   exit 1
@@ -29,6 +35,15 @@ fi
 
 # Step 1: Generate a new bash script with the given name
 cat <<EOL > "$name"
+=======
+if [ -z "${dir_path}" ] || [ -z "${name}" ]; then
+  echo "Usage: $0 -d dir_path -n name"
+  exit 1
+fi
+
+
+cat << EOF > "$name"
+>>>>>>> Stashed changes
 #!/bin/bash
 
 while getopts "o:" options; do
@@ -47,6 +62,7 @@ while getopts "o:" options; do
     esac
 done
 
+<<<<<<< Updated upstream
 # Step 2: Extract the compressed archive and execute it
 tail -n +\$(grep -n '^__ARCHIVE_BELOW__' "$0" | cut -d: -f1) "$0" | base64 -d | tar xz -C ${unpack_dir:-.}
 
@@ -60,6 +76,18 @@ EOL
 # Step 5: Create a compressed tar archive of the specified directory, encode it with base64
 tar czP "$dir_path" | base64 >> "$name"
 # Step 4: Make the script executable for all users
+=======
+#line_eof=\$(grep -an '^EOF\$' "\$0" | cut -d: -f1)
+line_eof=\$(awk '/^__ARCHIVE_BELOW__$/ {print NR + 1; exit 0; }' "\$0")
+tail -n +\${line_eof} | base64 -d | (cd "\$unpack_dir" && tar xzf -)
+exit 0
+
+__ARCHIVE_BELOW__
+EOF
+
+
+(cd "${dir_path}" && tar czf - .) | base64 >> "$name"
+>>>>>>> Stashed changes
 chmod +x "$name"
 
 echo "Self-extracting archive created: $name"
